@@ -1,7 +1,17 @@
+import { JsonRpcRequest, JsonRpcResponse, JsonRpcSuccessResponse } from "./server";
+
 //import superjson from "superjson";
+export type RpcTransport = (
+  req: JsonRpcRequest,
+  abortSignal: AbortSignal
+) => Promise<JsonRpcResponse>;
 
 type RpcClientOptions = FetchOptions;
-type FetchOptions = { url: string };
+
+type FetchOptions = {
+  url: string;
+  credentials?: RequestCredentials;
+};
 
 type Promisify<T> = T extends (...args: any[]) => Promise<any>
   ? T
@@ -14,25 +24,18 @@ type PromisifyMethods<T extends object> = {
 };
 
 export const rpcClient = <T extends object>(options: RpcClientOptions) => {
-
-  const transport = fetchTransport(options);
-  
   const sendRequest = async (method: string, args: any[]) => {
-    const req = {
-      jsonrpc: "2.0",
-      id:  new Date(),
-      method,
-      params: args,
-    };
-    //const raw = await transport(superjson.serialize(req));
-    const raw = await transport(req)
-    //const res = superjson.deserialize(raw);
-    const res = raw
+    try {
+      const res:JsonRpcSuccessResponse = await fetcher(options, {
+        jsonrpc: "2.0",
+        id: new Date().toString(),
+        method,
+        params: args,
+      });
 
-    if ("result" in res) {
       return res.result;
-    } else if ("error" in res) {
-      console.log("error");
+    } catch (e) {
+      console.log(e);
     }
   };
 
@@ -52,22 +55,22 @@ export const rpcClient = <T extends object>(options: RpcClientOptions) => {
   }) as PromisifyMethods<T>;
 };
 
-export const fetchTransport = (options: FetchOptions) => {
-  return async (req: any): Promise<any> => {
-    const res = await fetch(options.url, {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(req),
-    });
+export const fetcher = async (
+  options: FetchOptions,
+  req: JsonRpcRequest
+) => {
+  const res = await fetch(options.url, {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(req),
+  });
 
-    if (!res.ok) {
-      throw new Error(res.statusText);
-      //throw new RpcError(res.statusText, res.status);
-    }
+  if (!res.ok) {
+    throw new Error(res.statusText);
+  }
 
-    return await res.json();
-  };
+  return await res.json();
 };

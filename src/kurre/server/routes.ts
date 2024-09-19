@@ -7,7 +7,8 @@ export const appRouter = router({
   }),
   getExample: publicProcedure
     .input(z.object({ name: z.string() }))
-    .query(async ({ input }) => {
+    .query(async ({ ctx, input }) => {
+      console.log(ctx)
       return { message: input.name };
     }),
     getExampleBase: baseProcedure
