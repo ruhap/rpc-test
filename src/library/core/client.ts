@@ -1,4 +1,4 @@
-import { OperationType, QueryOperation } from "./router";
+import { MutationOperation, OperationType, QueryOperation } from "./router";
 import { JsonRpcRequest, JsonRpcSuccessResponse } from "./server";
 
 //import superjson from "superjson";
@@ -39,8 +39,8 @@ export const rpcClient = <T extends object>(options: RpcClientOptions) => {
     }
   };
 
-  type InferInput<T> = T extends OperationType<infer I, any> ? I : {}
-  type InferOutput<T> = T extends OperationType<any, infer I> ? I : {}
+  type InferInput<T> = T extends OperationType<infer I, any> ? I : {};
+  type InferOutput<T> = T extends OperationType<any, infer O> ? O : {};
 
   return new Proxy(options, {
     get(target, prop, receiver) {
@@ -49,28 +49,29 @@ export const rpcClient = <T extends object>(options: RpcClientOptions) => {
       }
       if (typeof prop === "symbol") return;
       if (prop === "toJSON") return;
-      return (...args: Array<Record<string, unknown>>) => {
-        const promise = sendRequest(prop.toString(), args);
-        promise.finally(() => {}).catch(() => {});
-        return promise;
+
+      return {
+        $get: async (args: { input: InferInput<T[typeof prop & keyof T]> }) => {
+          return sendRequest(prop.toString(), [args.input]);
+        },
+        $post: async (args: { input: InferInput<T[typeof prop & keyof T]> }) => {
+          return sendRequest(prop.toString(), [args.input]);
+        },
       };
     },
   }) as {
     [K in keyof T]: T[K] extends QueryOperation<any, any>
       ? {
-          $get: {
-            input: InferInput<T[K]>
-            output: InferOutput<T[K]>
-          }
+          $get: (args: { input: InferInput<T[K]> }) => Promise<InferOutput<T[K]>>;
         }
-      : {
-          $post: {
-            input: InferInput<T[K]>
-            output: InferOutput<T[K]>
-          }
+      : T[K] extends MutationOperation<any, any>
+      ? {
+          $post: (args: { input: InferInput<T[K]> }) => Promise<InferOutput<T[K]>>;
         }
-  };;
+      : never;
+  };
 };
+
 
 
 export const fetcher = async (options: FetchOptions, req: JsonRpcRequest) => {

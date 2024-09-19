@@ -9,7 +9,7 @@ export const appRouter = router({
     .input(z.object({ name: z.string() }))
     .query(async ({ ctx, input }) => {
       console.log(ctx);
-      return { message: input.name };
+      return { message: `Hello ${input.name}` };
     }),
   getExampleBase: baseProcedure
     .input(z.object({ name: z.string() }))
@@ -19,6 +19,7 @@ export const appRouter = router({
   createHello: publicProcedure
     .input(z.object({ message: z.string() }))
     .mutation(({ input }) => {
+      console.log("LMAO YOU MUTATED")
       return { message: input.message };
     }),
 });
