@@ -29,7 +29,10 @@ export const handleRpc = async <
     if (request.method === "GET" && operation.type === "query") {
       inputData = Object.fromEntries(url.searchParams.entries());
     } else if (request.method === "POST" && operation.type === "mutation") {
+      console.log("JIIIIIBOYYYY")
       inputData = await request.json();
+      console.log("jiiboy", inputData)
+
     } else {
       return {
         type: "error",
@@ -41,7 +44,7 @@ export const handleRpc = async <
       try {
         const parsedInput = operation.schema.safeParse(inputData);
 
-        console.log("parsedInput", parsedInput)
+        console.log("parsedInput", parsedInput);
 
         if (!parsedInput.success) {
           return {
@@ -63,10 +66,10 @@ export const handleRpc = async <
 
         const result = await operation.handler({
           ctx: {},
-          input: parsedInput,
+          input: parsedInput.data,
         });
 
-        console.log(result)
+        console.log("result", result);
 
         return { type: "success", result };
       } catch (error) {

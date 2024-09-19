@@ -1,10 +1,13 @@
 import { z } from "zod";
 import { MutationOperation, QueryOperation } from "./router";
 
-export type Middleware<T = object, R = void> = (params: {
-  ctx: T;
-  next: <B>(args: B) => Promise<B & T>;
-}) => Promise<R>;
+export type Middleware<I> = ({
+  ctx,
+  next,
+}: {
+  ctx: I
+  next: <B>(args?: B) => B & I
+}) => Promise<any>
 
 export class Procedure<Ctx = object> {
   private readonly middlewares: Middleware<Ctx>[] = [];

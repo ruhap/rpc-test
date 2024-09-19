@@ -7,14 +7,15 @@ export const appRouter = router({
   }),
   getExample: publicProcedure
     .input(z.object({ name: z.string() }))
-    .query(async ({ input }) => {
-      console.log("GET EXAMPLE IN APPROUTER")
-      return { message: input.name + "       <-- we broke" };
+    .query(async ({ ctx, input }) => {
+      console.log("GET EXAMPLE IN ROUTER")
+      console.log("ctx", ctx,"input", input)
+      return { message: input.name };
     }),
     getExampleBase: baseProcedure
     .input(z.object({ name: z.string() }))
     .query(async ({ input }) => {
-      return { message: input.name + "       <-- we broke" };
+      return { message: input.name };
     }),
   createHello: publicProcedure
     .input(z.object({ message: z.string() }))
