@@ -1,4 +1,6 @@
-type RpcClientOptions = string | FetchOptions;
+//import superjson from "superjson";
+
+type RpcClientOptions = FetchOptions;
 type FetchOptions = { url: string };
 
 type Promisify<T> = T extends (...args: any[]) => Promise<any>
@@ -12,16 +14,22 @@ type PromisifyMethods<T extends object> = {
 };
 
 export const rpcClient = <T extends object>(options: RpcClientOptions) => {
-  if (typeof options === "string") {
-    options = { url: options };
-  }
-  const transport = fetchTransport(options);
 
+  const transport = fetchTransport(options);
+  
   const sendRequest = async (method: string, args: any[]) => {
-    const res = await transport({ method, args });
+    const req = {
+      jsonrpc: "2.0",
+      id:  new Date(),
+      method,
+      params: args,
+    };
+    //const raw = await transport(superjson.serialize(req));
+    const raw = await transport(req)
+    //const res = superjson.deserialize(raw);
+    const res = raw
 
     if ("result" in res) {
-      console.log("res.result", res.result);
       return res.result;
     } else if ("error" in res) {
       console.log("error");
@@ -33,10 +41,11 @@ export const rpcClient = <T extends object>(options: RpcClientOptions) => {
       if (Reflect.has(target, prop)) {
         return Reflect.get(target, prop, receiver);
       }
-    //   if (typeof prop === "symbol") return;
-    //   if (prop === "toJSON") return;
+      if (typeof prop === "symbol") return;
+      if (prop === "toJSON") return;
       return (...args: any) => {
         const promise = sendRequest(prop.toString(), args);
+        promise.finally(() => {}).catch(() => {});
         return promise;
       };
     },
@@ -54,11 +63,11 @@ export const fetchTransport = (options: FetchOptions) => {
       body: JSON.stringify(req),
     });
 
-    console.log("RES", res)
     if (!res.ok) {
-        throw new Error(res.statusText)
+      throw new Error(res.statusText);
       //throw new RpcError(res.statusText, res.status);
     }
+
     return await res.json();
   };
 };
