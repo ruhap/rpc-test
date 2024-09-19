@@ -1,5 +1,5 @@
+import { appRouter } from "@/kurre/server/routes";
 import { handleRpc } from "@/library/core/server";
-import { appRouter } from "@/routes";
 import { NextRequest, NextResponse } from "next/server";
 
 const handler = async (req: NextRequest) => {
