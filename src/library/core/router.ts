@@ -37,7 +37,9 @@ export type MutationOperation<
   middlewares: Middleware<any>[];
 };
 
-export const router = <T extends Record<string, OperationType<any, any>>>(
+export type BaseRouter = Record<string, OperationType<any, any>>
+
+export const router = <T extends BaseRouter>(
   obj: T
 ) => {
   return obj;

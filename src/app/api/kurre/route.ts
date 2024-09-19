@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 const handler = async (req: NextRequest) => {
   const data = await handleRpc(req, appRouter);
+  console.log("handler:", data)
   return NextResponse.json(data);
 };
 

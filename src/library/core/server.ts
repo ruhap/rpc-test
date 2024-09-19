@@ -1,12 +1,12 @@
 import { NextRequest } from "next/server";
-import { OperationType } from "./router";
+import { BaseRouter, OperationType } from "./router";
 //import superjson from "superjson";
 
 export interface JsonRpcRequest {
   jsonrpc: "2.0";
   id?: string | number | null;
   method: string;
-  params: any[];
+  params: Array<Record<string, unknown>>;
 }
 
 export interface BaseJsonRpcResponse {
@@ -18,19 +18,17 @@ export interface JsonRpcErrorResponse extends BaseJsonRpcResponse {
   error: {
     code: number;
     message: string;
-    data?: any;
+    data?: unknown;
   };
 }
 
 export interface JsonRpcSuccessResponse extends BaseJsonRpcResponse {
-  result: any;
+  result: unknown;
 }
 
 export type JsonRpcResponse = JsonRpcSuccessResponse | JsonRpcErrorResponse;
 
-export const handleRpc = async <
-  T extends Record<string, OperationType<any, any>>
->(
+export const handleRpc = async <T extends BaseRouter>(
   request: NextRequest,
   router: T
 ): Promise<JsonRpcErrorResponse | JsonRpcSuccessResponse> => {
@@ -40,7 +38,10 @@ export const handleRpc = async <
     const operation = router[req.method];
 
     for (const middleware of operation.middlewares) {
-      await middleware({ ctx: {}, next: async (ctx) => ({ ...ctx }) });
+      await middleware({
+        ctx: { test: "in middleware loop" },
+        next: async (ctx) => ({ ...ctx }),
+      });
     }
 
     if (operation.schema) {
@@ -49,7 +50,7 @@ export const handleRpc = async <
       if (!parsedInput.success) {
         return {
           jsonrpc: "2.0",
-          id: new Date().toString(),
+          id: 1,
           error: {
             code: 1,
             message: "schema error",
@@ -64,7 +65,7 @@ export const handleRpc = async <
 
       return {
         jsonrpc: "2.0",
-        id: new Date().toString(),
+        id: 1,
         result: result,
       };
     } else {
@@ -75,14 +76,15 @@ export const handleRpc = async <
 
       return {
         jsonrpc: "2.0",
-        id: new Date().toString(),
+        id: 1,
         result: result,
       };
     }
-  } catch (e) {
+  } catch (e: unknown) {
+    console.log(e);
     return {
       jsonrpc: "2.0",
-      id: new Date().toString(),
+      id: 1,
       error: {
         code: 1,
         message: "error",
