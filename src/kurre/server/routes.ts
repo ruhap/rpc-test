@@ -1,9 +1,8 @@
 import { z } from "zod";
-import { publicProcedure } from "./kurre";
-import { router } from "./library/core/router";
+import { publicProcedure, router } from ".";
 
 export const appRouter = router({
-  getHello: publicProcedure.query(async ({ctx}) => {
+  getHello: publicProcedure.query(async () => {
     return { message: "Hello World" };
   }),
   getExample: publicProcedure

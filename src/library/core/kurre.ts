@@ -1,4 +1,5 @@
 import { Procedure } from "./procedure";
+import { router } from "./router";
 
 type MiddlewareFunction<T = object, R = void> = (params: {
   ctx: T;
@@ -13,6 +14,7 @@ export const initKurre = {
       ): MiddlewareFunction<T, R> => {
         return fn;
       },
+      router,
       procedure: new Procedure(),
     };
   },
