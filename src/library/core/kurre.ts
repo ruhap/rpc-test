@@ -1,17 +1,12 @@
-import { Procedure } from "./procedure";
+import { Middleware, Procedure } from "./procedure";
 import { router } from "./router";
-
-type MiddlewareFunction<T = object, R = void> = (params: {
-  ctx: T;
-  next: <B>(args: B) => Promise<B & T>;
-}) => Promise<R>;
 
 export const initKurre = {
   create: () => {
     return {
       middleware: <T = object, R = void>(
-        fn: MiddlewareFunction<T, R>
-      ): MiddlewareFunction<T, R> => {
+        fn: Middleware<T, R>
+      ): Middleware<T, R> => {
         return fn;
       },
       router,

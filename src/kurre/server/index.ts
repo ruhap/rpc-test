@@ -3,6 +3,7 @@ import { initKurre } from "@/library/core/kurre"
 const kurre = initKurre.create()
 
 const exampleMiddleware = kurre.middleware(async ({ next }) => {
+   console.log("exampleMiddleware ran")
    await next({ayy: "lmao"})
 })
 

@@ -1,13 +1,10 @@
 import { z } from "zod";
-import { OperationType } from "./router";
+import { MutationOperation, QueryOperation } from "./router";
 
-export type Middleware<I> = ({
-  ctx,
-  next,
-}: {
-  ctx: I;
-  next: <B>(args?: B) => B & I;
-}) => Promise<I>;
+export type Middleware<T = object, R = void> = (params: {
+  ctx: T;
+  next: <B>(args: B) => Promise<B & T>;
+}) => Promise<R>;
 
 export class Procedure<Ctx = object> {
   private readonly middlewares: Middleware<Ctx>[] = [];
@@ -28,16 +25,16 @@ export class Procedure<Ctx = object> {
     return new Procedure<Ctx & T & Return>([...this.middlewares, fn as any]);
   }
 
-  input = <Schema extends z.ZodType<any, any, any>>(schema: Schema) => ({
+  input = <Schema extends Record<string, unknown>>(schema: z.ZodSchema<Schema>) => ({
     query: <Output>(
       fn: ({
         input,
         ctx,
       }: {
-        input: z.infer<Schema>;
+        input: Schema;
         ctx: Ctx;
       }) => Output | Promise<Output>
-    ): OperationType<z.infer<Schema>, Output> => ({
+    ): QueryOperation<Schema, Output> => ({
       type: "query",
       schema,
       handler: fn as any,
@@ -49,10 +46,10 @@ export class Procedure<Ctx = object> {
         input,
         ctx,
       }: {
-        input: z.infer<Schema>;
+        input:Schema;
         ctx: Ctx;
       }) => Output | Promise<Output>
-    ): OperationType<z.infer<Schema>, Output> => ({
+    ): MutationOperation<Schema, Output> => ({
       type: "mutation",
       schema,
       handler: fn as any,
@@ -61,8 +58,8 @@ export class Procedure<Ctx = object> {
   });
 
   query<Output>(
-    fn: ({ input }: { input: never; ctx: Ctx }) => Output | Promise<Output>
-  ): OperationType<{}, Output> {
+    fn: ({ input, ctx }: { input: never; ctx: Ctx }) => Output | Promise<Output>
+  ): QueryOperation<{}, Output> {
     return {
       type: "query",
       handler: fn as any,
@@ -72,7 +69,7 @@ export class Procedure<Ctx = object> {
 
   mutation<Output>(
     fn: ({ input, ctx }: { input: never; ctx: Ctx }) => Output | Promise<Output>
-  ): OperationType<{}, Output> {
+  ): MutationOperation<{}, Output> {
     return {
       type: "mutation",
       handler: fn as any,

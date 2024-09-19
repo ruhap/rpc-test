@@ -39,20 +39,34 @@ export const handleRpc = async <
 
     if (operation.schema) {
       try {
+        const parsedInput = operation.schema.safeParse(inputData);
 
-        const parsedInput = operation.schema.parse(inputData);
+        console.log("parsedInput", parsedInput)
+
+        if (!parsedInput.success) {
+          return {
+            type: "error",
+            error: { code: 500, message: "Schema not correct" },
+          };
+        }
 
         for (const middleware of operation.middlewares) {
           await middleware({ ctx: {}, next: async (ctx) => ({ ...ctx }) });
         }
-        
+
         if (!operation.handler) {
-          return { type: "error", error: { code: 500, message: "Handler not found" } };
+          return {
+            type: "error",
+            error: { code: 500, message: "Handler not found" },
+          };
         }
+
         const result = await operation.handler({
           ctx: {},
           input: parsedInput,
         });
+
+        console.log(result)
 
         return { type: "success", result };
       } catch (error) {
@@ -66,7 +80,10 @@ export const handleRpc = async <
         throw error;
       }
     } else {
-      return { type: "error", error: { code: 500, message: "Schema not found" } };
+      return {
+        type: "error",
+        error: { code: 500, message: "Schema not found" },
+      };
     }
   } catch (e: unknown) {
     console.log(e);

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { publicProcedure, router } from ".";
+import { baseProcedure, publicProcedure, router } from ".";
 
 export const appRouter = router({
   getHello: publicProcedure.query(async () => {
@@ -7,8 +7,14 @@ export const appRouter = router({
   }),
   getExample: publicProcedure
     .input(z.object({ name: z.string() }))
-    .query(async ({ ctx, input }) => {
-      return { ctx, input };
+    .query(async ({ input }) => {
+      console.log("GET EXAMPLE IN APPROUTER")
+      return { message: input.name + "       <-- we broke" };
+    }),
+    getExampleBase: baseProcedure
+    .input(z.object({ name: z.string() }))
+    .query(async ({ input }) => {
+      return { message: input.name + "       <-- we broke" };
     }),
   createHello: publicProcedure
     .input(z.object({ message: z.string() }))

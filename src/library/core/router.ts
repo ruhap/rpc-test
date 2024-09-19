@@ -1,8 +1,16 @@
+import { z } from "zod";
 import { Middleware } from "./procedure";
 
-export type OperationType<Schema extends Record<string, unknown>, ZodInput = never> = {
-  type: "mutation" |"query";
-  schema?: Schema;
+export type OperationType<I extends Record<string, unknown>, O> =
+  | QueryOperation<I, O>
+  | MutationOperation<I, O>;
+
+export type QueryOperation<
+  Schema extends Record<string, unknown>,
+  ZodInput = never
+> = {
+  type: "query";
+  schema?: z.ZodType<Schema>;
   handler: <Ctx, Output>({
     ctx,
     input,
@@ -10,7 +18,23 @@ export type OperationType<Schema extends Record<string, unknown>, ZodInput = nev
     ctx: Ctx;
     input: ZodInput;
   }) => Promise<Output>;
-  middlewares: Middleware<any>[]
+  middlewares: Middleware<any>[];
+};
+
+export type MutationOperation<
+  Schema extends Record<string, unknown>,
+  ZodInput = never
+> = {
+  type: "mutation";
+  schema?: z.ZodType<Schema>;
+  handler: <Ctx, Output>({
+    ctx,
+    input,
+  }: {
+    ctx: Ctx;
+    input: ZodInput;
+  }) => Promise<Output>;
+  middlewares: Middleware<any>[];
 };
 
 export const router = <T extends Record<string, OperationType<any, any>>>(
@@ -19,4 +43,4 @@ export const router = <T extends Record<string, OperationType<any, any>>>(
   return obj;
 };
 
-export type Router = typeof router
+export type Router = typeof router;
