@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 const handler = async (req: NextRequest) => {
     const rpcResponse = await handleRpc(req, appRouter);
-
+//move this to handleRpc
     if (rpcResponse.type === "success") {
       return NextResponse.json(rpcResponse.result, { status: 200 });
     } else {

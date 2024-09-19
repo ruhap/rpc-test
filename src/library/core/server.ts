@@ -39,6 +39,7 @@ export const handleRpc = async <
 
     if (operation.schema) {
       try {
+
         const parsedInput = operation.schema.parse(inputData);
 
         for (const middleware of operation.middlewares) {
